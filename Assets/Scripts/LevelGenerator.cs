@@ -12,11 +12,13 @@ public class LevelGenerator : MonoBehaviour
     [SerializeField] private GameObject _cardField;
     [SerializeField] private int _currentLevel;
     [SerializeField] private Session _session;
+    [SerializeField] private CameraMovement _camera;  
+
+    [SerializeField] private int _numberGridRows;
+    [SerializeField] private int _numberGridCols;
 
     private int[] _cardDeck;
     private MemoryCard[] _allCardsField;
-    private int _numberGridRows;
-    private int _numberGridCols;    
 
     public int CurrentLevel => _currentLevel;
     public int NumberPairs => _numberPairs;
@@ -32,16 +34,24 @@ public class LevelGenerator : MonoBehaviour
         foreach (MemoryCard card in _allCardsField)
         {
             card.OnDestroy();
-        }
+        }        
+    }
+
+    public void AddCardDeck()
+    {
+        _numberPairs += 1;
+        DeleteGridCards();
+        IncreaseGridSize(_numberPairs * 2);
+        _cardDeck = GetDeckCards(_numberPairs * 2);
+        CreateGridCards(_cardDeck, _numberGridRows, _numberGridCols);
     }
 
     private void Start()
     {
         if (_session.RestMinutes <= 0)
-        {
-            SetSizeGridDeck(_numberPairs * 2);
+        {            
             _cardDeck = GetDeckCards(_numberPairs * 2);
-            CreateGridCards(_cardDeck, _numberGridRows, _numberGridCols, _columnSpacing, _lineSpacing);
+            CreateGridCards(_cardDeck, _numberGridRows, _numberGridCols);
         }            
     }
 
@@ -58,41 +68,32 @@ public class LevelGenerator : MonoBehaviour
         return ShuffleArray(cardDeck);
     }
 
-    private void CreateGridCards(int [] cardDeck, int numberLines, int numberColumns, float columnSpacing, float lineSpacing)
-    {     
-        for (int i = 0; i < numberLines; i++)
+    private void CreateGridCards(int [] cardDeck, int numberRows, int numberColumns)
+    {        
+        for (int i = 0; i < numberColumns; i++)
         {            
-            for (int j = 0; j < numberColumns; j++)
-            {                    
-                float positionCardsX = columnSpacing * i;
-                float positionCardsY = lineSpacing * j;
-                Vector3 positionCard = new Vector3(positionCardsX, positionCardsY, 0);
+            for (int j = 0; j < numberRows; j++)
+            {
+                int index = j * numberColumns + i;
 
-                int index = j * numberLines + i;
                 if (index < cardDeck.Length) 
                 {
                     int idCard = cardDeck[index];
-                    CreateCard(positionCard, idCard);
+                    float positionCardsX = _columnSpacing * i;
+                    float positionCardsY = _lineSpacing * j;
+                    Vector3 positionCard = new Vector3(positionCardsX, positionCardsY, 0);
+                    CreateCard(positionCard, idCard);                    
                 }                                     
-            }                       
+            }            
         }        
     }   
 
     private void CreateCard(Vector3 positionCard, int idCard)
     {
         GameObject newCard = Instantiate(_templateCard, _cardField.transform);
-        newCard.transform.position += positionCard; 
+        newCard.transform.position = positionCard; 
         newCard.GetComponent<MemoryCard>().SetFaceCard(idCard);        
-    }
-
-    public void AddCardDeck()
-    {
-        _numberPairs += 1;
-        DeleteGridCards();        
-        SetSizeGridDeck(_numberPairs * 2);
-        _cardDeck = GetDeckCards(_numberPairs * 2);
-        CreateGridCards(_cardDeck, _numberGridCols, _numberGridRows, _columnSpacing, _lineSpacing);
-    }
+    }   
 
     private int[] ShuffleArray(int[] number)
     {
@@ -105,40 +106,25 @@ public class LevelGenerator : MonoBehaviour
             newArray[r] = tmp;
         }
         return newArray;
-    }
+    }  
 
-    private void SetSizeGridDeck(int totalNumberCards)
-    {        
-        totalNumberCards = Mathf.Clamp(totalNumberCards, 16, 36);
-        if (totalNumberCards == 16)
+    private void IncreaseGridSize(int totalNumberCards)
+    {
+        if ((_numberGridRows - _numberGridCols) != 0)
         {
-            _numberGridRows = 4;
-            _numberGridCols = 4;
+            if (totalNumberCards > (_numberGridRows * _numberGridCols))
+            {
+                _numberGridRows += 1;
+                _camera.ZoomOutCamera(_columnSpacing);  
+            }
         }
-        else if (totalNumberCards == 18)
+        else
         {
-            _numberGridRows = 4;
-            _numberGridCols = 5;
-        }
-        else if (totalNumberCards == 20)
-        {
-            _numberGridRows = 5;
-            _numberGridCols = 5;
-        }
-        else if (totalNumberCards > 20 && totalNumberCards < 31)
-        {
-            _numberGridRows = 5;
-            _numberGridCols = 6;
-        }
-        else if (totalNumberCards > 30 && totalNumberCards < 36)
-        {
-            _numberGridRows = 5;
-            _numberGridCols = 7;
-        }
-        else if (totalNumberCards == 36)
-        {
-            _numberGridRows = 6;
-            _numberGridCols = 6;
+            if (totalNumberCards > (_numberGridRows * _numberGridCols))
+            {                
+                _numberGridCols += 1;
+                _camera.MoveCamera(_numberGridRows / (_numberGridRows - 1) / _lineSpacing);
+            }            
         }
     }
 }

@@ -5,11 +5,12 @@ using UnityEngine.Events;
 
 public class CardOpener : MonoBehaviour
 {
-    [SerializeField] private MemoryCard _firstCard;
-    [SerializeField] private MemoryCard _secondCard;    
     [SerializeField] private UnityEvent _сoupleFound;
     [SerializeField] private UnityEvent _сoupleNotFound;
-    [SerializeField] private bool _onTwoCardsOpen;
+
+    private MemoryCard _firstCard;
+    private MemoryCard _secondCard;
+    private bool _onTwoCardsOpen;   
 
     public bool OnTwoCardsOpen => _onTwoCardsOpen;
        
